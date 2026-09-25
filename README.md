@@ -1,19 +1,25 @@
-# OHS APIs
+# Distributed integration platform
 
-OHS APIs is a .NET Aspire solution for four independently deployable domain services:
+Distributed integration platform is a .NET Aspire solution for four independently deployable domain services:
 
 - Customer API: ASP.NET Core, CQRS, PostgreSQL, Liquibase.
 - Invoice API: ASP.NET Core, CQRS, SQL Server, EF Core code first.
 - Payment API: FastAPI, SQLAlchemy, PostgreSQL, Liquibase.
 - Vendor API: FastAPI, SQLAlchemy, SQL Server, Alembic.
 
-The Aspire AppHost runs the services and local infrastructure. RabbitMQ handles asynchronous integration events. Keycloak provides local and CI identity tokens. Production and shared-environment identity uses the selected external OIDC broker.
+The Aspire AppHost runs the services and local infrastructure. RabbitMQ handles asynchronous integration events. Keycloak provides identity tokens for local, CI, and initial shared development. Microsoft Entra External ID remains a future Azure option.
 
 ## Plan and traceability
 
-The implementation plan is in `.plans/ohs-api-implementation-plan.md`. It defines the architecture, phase order, contracts, event workflows, and delivery decisions.
+The implementation plan is maintained locally in `.plans/ohs-api-implementation-plan.md`. It defines the architecture, phase order, contracts, event workflows, and delivery decisions.
 
 The plan's requirements traceability matrix maps stable requirement IDs to implementation phases, GitHub Issues, acceptance criteria, and tests.
+
+Pre-implementation decisions and contracts are in:
+
+- `docs/pre-implementation/cross-cutting-standards.md`
+- `docs/pre-implementation/api-contract-baseline.md`
+- `docs/pre-implementation/event-contracts-and-readiness.md`
 
 ## Implementation order
 
