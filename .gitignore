@@ -32,3 +32,5 @@ secrets/
 # Tool and OS files
 .DS_Store
 Thumbs.db
+.notes/
+.github/
