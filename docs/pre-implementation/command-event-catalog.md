@@ -2,7 +2,8 @@
 
 This catalog defines the command, domain-event, projection, and integration-event boundaries for the seven initial services.
 
-Commands enter through the owning service. Domain events remain internal to that bounded context. Only approved integration events cross service boundaries through the transactional outbox and RabbitMQ.
+Commands enter through the owning service. Domain events remain internal to that bounded context. Only approved integration events cross
+service boundaries through the transactional outbox and RabbitMQ.
 
 Public integration event names use lowercase dot notation with an explicit version, such as `contract.activated.v1`.
 
@@ -59,7 +60,8 @@ Persistence: state-based SQL Server model.
 - `vendor.bank-account-verified.v1`
 - `vendor.deactivated.v1`
 
-Bank-account commands require encrypted persistence and explicit authorization. Plaintext account and routing numbers must not appear in events or logs.
+Bank-account commands require encrypted persistence and explicit authorization. Plaintext account and routing numbers must not appear in
+events or logs.
 
 ## Contract service
 
@@ -121,7 +123,8 @@ Persistence: state-based SQL Server model with immutable issued invoices and dom
 - `InvoicePaid`
 - `InvoiceVoided`
 
-After issuance, invoice financial fields and line items cannot be updated. Payment status is derived from validated payment events and does not rewrite the original invoice document.
+After issuance, invoice financial fields and line items cannot be updated. Payment status is derived from validated payment events and does
+not rewrite the original invoice document.
 
 ### Integration events
 
@@ -175,7 +178,8 @@ Persistence: event-sourced PostgreSQL model with double-entry projections.
 - `RecordCredit`
 - `CloseAccountingPeriod`
 
-The preferred application operation is `RecordTransaction`, which validates and records a complete balanced transaction. `RecordDebit` and `RecordCredit` are internal aggregate operations and must not permit an externally visible unbalanced transaction.
+The preferred application operation is `RecordTransaction`, which validates and records a complete balanced transaction. `RecordDebit` and
+`RecordCredit` are internal aggregate operations and must not permit an externally visible unbalanced transaction.
 
 ### Domain events
 
@@ -189,7 +193,8 @@ The preferred application operation is `RecordTransaction`, which validates and 
 - `LedgerEntryProjectionUpdated`
 - `LedgerBalanceProjectionUpdated`
 
-Every posted transaction must contain at least one debit and one credit, use the same currency, and balance exactly. Ledger events are immutable. Corrections use reversal or compensating transactions.
+Every posted transaction must contain at least one debit and one credit, use the same currency, and balance exactly. Ledger events are
+immutable. Corrections use reversal or compensating transactions.
 
 ## Notification service
 
@@ -214,7 +219,8 @@ Persistence: state-based PostgreSQL workflow with attempts and outbox.
 - `invoice.sent.v1`
 - `payment.completed.v1`
 
-Notification creates a delivery request from the consumed event. It owns provider attempts and retry state. It does not emit `invoice.sent.v1`; Invoice API owns that integration event.
+Notification creates a delivery request from the consumed event. It owns provider attempts and retry state. It does not emit
+`invoice.sent.v1`; Invoice API owns that integration event.
 
 ### Integration events
 
