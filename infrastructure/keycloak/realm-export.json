@@ -1,0 +1,25 @@
+{
+  "realm": "ohs",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "platform-admin" },
+      { "name": "tenant-admin" },
+      { "name": "operator" },
+      { "name": "read-only" },
+      { "name": "service-client" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "ohs-api",
+      "publicClient": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": true,
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      }
+    }
+  ]
+}
