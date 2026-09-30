@@ -23,7 +23,8 @@
 | Trusted issuer | Broker only |
 | Required token data | `iss`, `aud`, `sub`, expiry, scopes, roles, and tenant claim |
 
-Keycloak can federate Google, GitHub, and Microsoft through provider-specific OAuth/OIDC connections and issues the JWT trusted by the APIs. The APIs never receive provider credentials, store passwords, or accept raw provider tokens.
+Keycloak can federate Google, GitHub, and Microsoft through provider-specific OAuth/OIDC connections and issues the JWT trusted by the APIs.
+The APIs never receive provider credentials, store passwords, or accept raw provider tokens.
 
 ## Authorization
 
@@ -37,7 +38,8 @@ read-only: tenant
 service-client: explicitly assigned
 ```
 
-Every tenant-scoped resource must carry a tenant identifier. The API derives the caller tenant from a trusted token claim and compares it with the resource tenant.
+Every tenant-scoped resource must carry a tenant identifier. The API derives the caller tenant from a trusted token claim and compares it
+with the resource tenant.
 
 ## Reliability targets
 
@@ -57,9 +59,12 @@ These are initial targets for local and shared-environment validation, not produ
 
 ## Observability
 
-Every request should carry or create `X-Correlation-Id` and propagate W3C trace context. Structured logs include service, route, status, duration, correlation ID, and trace ID. Logs must exclude tokens, authorization headers, passwords, connection strings, payment secrets, and unnecessary personal data.
+Every request should carry or create `X-Correlation-Id` and propagate W3C trace context. Structured logs include service, route, status,
+duration, correlation ID, and trace ID. Logs must exclude tokens, authorization headers, passwords, connection strings, payment secrets, and
+unnecessary personal data.
 
-Health endpoints must separate liveness from readiness. Readiness checks may include databases, RabbitMQ, and required outbound dependencies.
+Health endpoints must separate liveness from readiness. Readiness checks may include databases, RabbitMQ, and required outbound
+dependencies.
 
 ## Data and migrations
 
@@ -73,18 +78,29 @@ Health endpoints must separate liveness from readiness. Readiness checks may inc
 | Ledger | PostgreSQL | .NET repository | Liquibase |
 | Notification | PostgreSQL | .NET worker/API | Liquibase |
 
-No service reads another service's database. Migrations run before the dependent API starts and are validated in CI. Event-sourced write models are the source of truth; projections are rebuildable query models.
+No service reads another service's database. Migrations run before the dependent API starts and are validated in CI. Event-sourced write
+models are the source of truth; projections are rebuildable query models.
 
-PostgreSQL is the selected database for Contract because the service needs strong transactional integrity for commercial terms and flexible JSONB-backed structures for line items, discounts, usage rules, and renewal metadata. Contract remains independently owned even though Customer and Payment also use PostgreSQL.
+PostgreSQL is the selected database for Contract because the service needs strong transactional integrity for commercial terms and flexible
+JSONB-backed structures for line items, discounts, usage rules, and renewal metadata. Contract remains independently owned even though
+Customer and Payment also use PostgreSQL.
 
-Ledger uses a separate PostgreSQL database for immutable double-entry entries, balances, reconciliation, and audit history. Notification uses a separate PostgreSQL database for notification requests, provider delivery attempts, status transitions, idempotency, and retry state. Neither service reads another service's tables.
+Ledger uses a separate PostgreSQL database for immutable double-entry entries, balances, reconciliation, and audit history. Notification
+uses a separate PostgreSQL database for notification requests, provider delivery attempts, status transitions, idempotency, and retry state.
+Neither service reads another service's tables.
 
 ## CQRS, DDD, and event sourcing
 
-Each bounded context has its own aggregate roots, value objects, domain services, commands, queries, and policies. Commands mutate aggregates through domain behavior. Queries read projections and do not mutate state.
+Each bounded context has its own aggregate roots, value objects, domain services, commands, queries, and policies. Commands mutate
+aggregates through domain behavior. Queries read projections and do not mutate state.
 
-Contract, Payment, and Ledger use event-sourced write models. Their event streams contain immutable, versioned domain events and are protected by aggregate sequence checks. Contract events record commercial lifecycle and term changes. Payment events record initiation, processing, settlement, refund, and dispute decisions. Ledger events record posted entries, reversals, reconciliation, and audit facts.
+Contract, Payment, and Ledger use event-sourced write models. Their event streams contain immutable, versioned domain events and are
+protected by aggregate sequence checks. Contract events record commercial lifecycle and term changes. Payment events record initiation,
+processing, settlement, refund, and dispute decisions. Ledger events record posted entries, reversals, reconciliation, and audit facts.
 
-Customer, Vendor, Invoice, and Notification use state-based write storage with domain events and transactional outbox records unless later evidence requires full event sourcing. This keeps event sourcing focused on commercial and financial histories while preserving the same DDD and CQRS boundaries across all services.
+Customer, Vendor, Invoice, and Notification use state-based write storage with domain events and transactional outbox records unless later
+evidence requires full event sourcing. This keeps event sourcing focused on commercial and financial histories while preserving the same DDD
+and CQRS boundaries across all services.
 
-Every event-sourced service also maintains projections for API reads. Projections include a source event position and can be rebuilt. Public integration events use stable contracts and are not a direct exposure of internal event-store schemas.
+Every event-sourced service also maintains projections for API reads. Projections include a source event position and can be rebuilt. Public
+integration events use stable contracts and are not a direct exposure of internal event-store schemas.

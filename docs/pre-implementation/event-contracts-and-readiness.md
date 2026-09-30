@@ -2,7 +2,9 @@
 
 ## Summary
 
-RabbitMQ is the selected broker for local development, CI, and the initial shared environment. The seven initial domain services publish versioned integration events through transactional outboxes and consume them idempotently. Contract, Payment, and Ledger use event-sourced write models with projections for reads.
+RabbitMQ is the selected broker for local development, CI, and the initial shared environment. The seven initial domain services publish
+versioned integration events through transactional outboxes and consume them idempotently. Contract, Payment, and Ledger use event-sourced
+write models with projections for reads.
 
 ```mermaid
 flowchart LR
@@ -29,7 +31,8 @@ flowchart LR
 | Ledger API | Double-entry postings, balances, reconciliation, and audit trails | Customer profiles, contract terms, invoice ownership, payment execution |
 | Notification API | Notification requests, provider adapters, delivery attempts, status, retries, and idempotency | Customer identity, contract terms, invoice state, payment settlement |
 
-Usage Metering is a future service. Ledger and Notification are initial services so accounting and delivery responsibilities remain outside the domain APIs that produce their events.
+Usage Metering is a future service. Ledger and Notification are initial services so accounting and delivery responsibilities remain outside
+the domain APIs that produce their events.
 
 ### Service ownership and event topology
 
@@ -93,13 +96,17 @@ Event envelopes include:
 }
 ```
 
-Events contain identifiers and the minimum data required by consumers. They must not contain access tokens, card numbers, security codes, passwords, or unnecessary personal data.
+Events contain identifiers and the minimum data required by consumers. They must not contain access tokens, card numbers, security codes,
+passwords, or unnecessary personal data.
 
 ## Event-sourced domain model
 
-Contract, Payment, and Ledger keep immutable domain event streams in their own PostgreSQL databases. Each stream is identified by aggregate ID and includes a monotonically increasing sequence number. Commands use expected-version checks to prevent lost updates. Snapshots may speed rehydration, but projections and snapshots can be deleted and rebuilt from the event stream.
+Contract, Payment, and Ledger keep immutable domain event streams in their own PostgreSQL databases. Each stream is identified by aggregate
+ID and includes a monotonically increasing sequence number. Commands use expected-version checks to prevent lost updates. Snapshots may
+speed rehydration, but projections and snapshots can be deleted and rebuilt from the event stream.
 
-Customer, Vendor, Invoice, and Notification use state-based command persistence with domain events and transactional outbox records. Their state tables are not shared with other services.
+Customer, Vendor, Invoice, and Notification use state-based command persistence with domain events and transactional outbox records. Their
+state tables are not shared with other services.
 
 Internal event streams and public integration events are separate contracts:
 
@@ -138,16 +145,17 @@ Command -> Aggregate rehydration -> Domain events -> Event store
 
 ## Contract-driven billing workflow
 
-1. Customer API creates a customer and publishes `customer.created.v1`.
-2. Contract API validates the customer or vendor reference, stores commercial terms, and publishes `contract.created.v1`.
-3. Contract API activates the contract and publishes `contract.activated.v1`.
-4. Invoice API schedules or accepts invoice generation for a billing cycle, usage event, or manual command.
-5. Invoice API creates an immutable invoice and publishes `invoice.created.v1`.
-6. Invoice API marks the invoice as ready for delivery and publishes `invoice.sent.v1`. Notification API consumes the event, sends email, SMS, or push notifications, and publishes delivery outcome events.
-7. Payment API consumes the invoice events, accepts an idempotent payment command, coordinates lock and pay processing, and publishes `payment.completed.v1`, `payment.failed.v1`, or `payment.refunded.v1`.
-8. Invoice API updates derived payment status to `partially_paid`, `paid`, or `overdue` without mutating the original invoice document.
-9. Ledger API records double-entry entries from invoice, payment, refund, and void events.
-10. Contract API renews the contract or processes cancellation. Renewal starts the next billing period and can cause Invoice API to generate the next invoice.
+1. Customer API creates a customer and publishes `customer.created.v1`. 2. Contract API validates the customer or vendor reference, stores
+   commercial terms, and publishes `contract.created.v1`. 3. Contract API activates the contract and publishes `contract.activated.v1`. 4.
+   Invoice API schedules or accepts invoice generation for a billing cycle, usage event, or manual command. 5. Invoice API creates an
+   immutable invoice and publishes `invoice.created.v1`. 6. Invoice API marks the invoice as ready for delivery and publishes
+   `invoice.sent.v1`. Notification API consumes the event, sends email, SMS, or push notifications, and publishes delivery outcome events.
+   7. Payment API consumes the invoice events, accepts an idempotent payment command, coordinates lock and pay processing, and publishes
+   `payment.completed.v1`, `payment.failed.v1`, or `payment.refunded.v1`. 8. Invoice API updates derived payment status to `partially_paid`,
+   `paid`, or `overdue` without mutating the original invoice document. 9. Ledger API records double-entry entries from invoice, payment,
+   refund, and void events.
+10. Contract API renews the contract or processes cancellation. Renewal starts the next billing period and can cause Invoice API to generate
+    the next invoice.
 
 ```mermaid
 sequenceDiagram
@@ -254,4 +262,5 @@ sequenceDiagram
 - [x] Local notification adapter defined as an email adapter with provider-neutral configuration.
 - [ ] Select the deployable hosting provider after free-tier testing.
 
-The initial implementation includes Ledger and Notification APIs. Usage Metering remains deferred, with its event contract reserved so it can be introduced without changing ownership of Customer, Vendor, Contract, Invoice, Payment, Ledger, or Notification data.
+The initial implementation includes Ledger and Notification APIs. Usage Metering remains deferred, with its event contract reserved so it
+can be introduced without changing ownership of Customer, Vendor, Contract, Invoice, Payment, Ledger, or Notification data.

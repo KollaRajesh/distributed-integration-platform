@@ -1,12 +1,16 @@
 # Entity relationship model
 
-This document defines the logical relationships between the seven initial services and the physical relationships inside each service database.
+This document defines the logical relationships between the seven initial services and the physical relationships inside each service
+database.
 
-Each service owns its database. Relationships between services use identifiers and versioned integration events. They are not implemented as cross-database foreign keys or shared tables.
+Each service owns its database. Relationships between services use identifiers and versioned integration events. They are not implemented as
+cross-database foreign keys or shared tables.
 
 ## Domain relationship model
 
-Contract is the root commercial object. Customer and Vendor are reference subjects for a contract. Contract produces invoices. Payments settle invoices. Ledger records accounting facts from invoices and payments. Notification records delivery work triggered by invoice and payment events.
+Contract is the root commercial object. Customer and Vendor are reference subjects for a contract. Contract produces invoices. Payments
+settle invoices. Ledger records accounting facts from invoices and payments. Notification records delivery work triggered by invoice and
+payment events.
 
 ```mermaid
 erDiagram
@@ -24,7 +28,8 @@ erDiagram
     PAYMENT ||--o{ NOTIFICATION : triggers
 ```
 
-The diagram is logical. `customerId`, `vendorId`, `contractId`, `invoiceId`, and `paymentId` are validated through APIs, projections, and events. They are not cross-service database constraints.
+The diagram is logical. `customerId`, `vendorId`, `contractId`, `invoiceId`, and `paymentId` are validated through APIs, projections, and
+events. They are not cross-service database constraints.
 
 ## Service database ownership
 
@@ -176,7 +181,8 @@ erDiagram
     }
 ```
 
-`(contract_id, version)` is unique in the event stream. `customer_id` and `vendor_id` are logical references to Customer and Vendor services.
+`(contract_id, version)` is unique in the event stream. `customer_id` and `vendor_id` are logical references to Customer and Vendor
+services.
 
 ## Invoice database
 
@@ -233,7 +239,8 @@ erDiagram
 
 ## Payment database
 
-Payment is event sourced. The original payment stream is never rewritten. Refunds and disputes append new events and create related projection records.
+Payment is event sourced. The original payment stream is never rewritten. Refunds and disputes append new events and create related
+projection records.
 
 ```mermaid
 erDiagram
@@ -343,7 +350,8 @@ erDiagram
     }
 ```
 
-Valid account types are `asset`, `liability`, `equity`, `revenue`, and `expense`. Valid directions are `debit` and `credit`. `reference_id` points logically to an invoice or payment.
+Valid account types are `asset`, `liability`, `equity`, `revenue`, and `expense`. Valid directions are `debit` and `credit`. `reference_id`
+points logically to an invoice or payment.
 
 ## Notification database
 
@@ -393,7 +401,8 @@ erDiagram
     }
 ```
 
-Add a unique constraint on `(notification_id, attempt_number)`. Provider credentials and access tokens must not be stored in notification payloads or attempt responses.
+Add a unique constraint on `(notification_id, attempt_number)`. Provider credentials and access tokens must not be stored in notification
+payloads or attempt responses.
 
 ## Relationship and integrity rules
 

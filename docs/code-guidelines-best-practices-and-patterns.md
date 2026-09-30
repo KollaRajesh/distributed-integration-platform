@@ -1,6 +1,7 @@
 # Code guidelines, best practices, and patterns
 
-This document defines the coding and architecture baseline for the distributed integration platform. Project-specific configuration and established local patterns take precedence when they are intentional and documented.
+This document defines the coding and architecture baseline for the distributed integration platform. Project-specific configuration and
+established local patterns take precedence when they are intentional and documented.
 
 ## Solution structure
 
@@ -26,7 +27,8 @@ infrastructure/
 .plans/
 ```
 
-The AppHost owns local orchestration, resource references, dependency ordering, and developer experience. It does not own domain behavior. Shared libraries should contain stable cross-cutting concerns, not service-specific rules.
+The AppHost owns local orchestration, resource references, dependency ordering, and developer experience. It does not own domain behavior.
+Shared libraries should contain stable cross-cutting concerns, not service-specific rules.
 
 ## Application architecture
 
@@ -51,15 +53,19 @@ Infrastructure/
   Migrations/
 ```
 
-Keep endpoints thin. An endpoint should bind and validate input, call an application handler or service, and translate the result into the documented HTTP response. Domain rules belong in the domain or application layer, not in controllers, route functions, repositories, or database mappings.
+Keep endpoints thin. An endpoint should bind and validate input, call an application handler or service, and translate the result into the
+documented HTTP response. Domain rules belong in the domain or application layer, not in controllers, route functions, repositories, or
+database mappings.
 
 ### DDD and bounded contexts
 
 - Keep Customer, Vendor, Contract, Invoice, Payment, Ledger, and Notification as separate bounded contexts.
-- Define an aggregate root for each consistency boundary. Commands enter through an aggregate and cannot update another service's aggregate directly.
+- Define an aggregate root for each consistency boundary. Commands enter through an aggregate and cannot update another service's aggregate
+  directly.
 - Use value objects for money, currency, billing cycles, tax identifiers, addresses, payment methods, and other concepts defined by value.
 - Keep domain services for rules that do not naturally belong to one entity or aggregate.
-- Publish domain events inside the owning bounded context. Translate selected domain events into versioned integration events at the application boundary.
+- Publish domain events inside the owning bounded context. Translate selected domain events into versioned integration events at the
+  application boundary.
 - Reference another bounded context by identifier and integration event, never by shared entity classes or database joins.
 
 ### CQRS
@@ -72,16 +78,20 @@ Keep endpoints thin. An endpoint should bind and validate input, call an applica
 
 ### Event sourcing
 
-- Use event sourcing for Contract, Payment, and Ledger write models because commercial lifecycle, financial mutation history, and auditability require an append-only source of truth.
-- Store immutable, versioned domain events with aggregate ID, aggregate type, sequence number, event type, schema version, occurred time, causation ID, correlation ID, tenant ID, and serialized payload.
+- Use event sourcing for Contract, Payment, and Ledger write models because commercial lifecycle, financial mutation history, and
+  auditability require an append-only source of truth.
+- Store immutable, versioned domain events with aggregate ID, aggregate type, sequence number, event type, schema version, occurred time,
+  causation ID, correlation ID, tenant ID, and serialized payload.
 - Rehydrate an aggregate by replaying its events. Reject commands whose expected aggregate version does not match the event-store version.
 - Use snapshots for aggregates with long event streams. Snapshots are performance artifacts and never replace the event stream.
 - Project events into query tables for list, search, balances, invoice status, and operational views.
-- Customer, Vendor, Invoice, and Notification may use state-based command storage with domain events and outbox records where full event sourcing does not provide enough benefit. Their integration events must still be versioned and durable.
+- Customer, Vendor, Invoice, and Notification may use state-based command storage with domain events and outbox records where full event
+  sourcing does not provide enough benefit. Their integration events must still be versioned and durable.
 - Do not publish internal event-store records directly as public integration contracts. Map them to stable `*.v1` integration events.
 - Event payloads are immutable. Corrective actions append compensating events instead of editing history.
 
-Use records or immutable DTOs for request and response models when that matches the language and framework version. Keep persistence models separate from API contracts. Use explicit mapping for fields that affect security, identity, ownership, or soft deletion.
+Use records or immutable DTOs for request and response models when that matches the language and framework version. Keep persistence models
+separate from API contracts. Use explicit mapping for fields that affect security, identity, ownership, or soft deletion.
 
 ## .NET guidance
 
@@ -122,7 +132,8 @@ PUT    /v1/customers/{customerId}
 DELETE /v1/customers/{customerId}
 ```
 
-List endpoints should support only documented filters and sort fields. Reject unknown or invalid query values instead of silently ignoring them. Enforce a default and maximum page size. Use stable ordering, especially when paging by a non-unique field.
+List endpoints should support only documented filters and sort fields. Reject unknown or invalid query values instead of silently ignoring
+them. Enforce a default and maximum page size. Use stable ordering, especially when paging by a non-unique field.
 
 Return a consistent list envelope:
 
@@ -136,7 +147,8 @@ Return a consistent list envelope:
 }
 ```
 
-Use RFC 9457-compatible Problem Details with a stable application error code and field-level validation details where applicable. Do not expose implementation details, SQL errors, stack traces, or secrets.
+Use RFC 9457-compatible Problem Details with a stable application error code and field-level validation details where applicable. Do not
+expose implementation details, SQL errors, stack traces, or secrets.
 
 ## Persistence patterns
 
@@ -154,20 +166,23 @@ Use RFC 9457-compatible Problem Details with a stable application error code and
 
 ## Authentication and authorization
 
-Validate JWT issuer, audience, signature, lifetime, and required claims. Use shared policy names and equivalent role semantics across .NET and Python services. Separate authentication from authorization:
+Validate JWT issuer, audience, signature, lifetime, and required claims. Use shared policy names and equivalent role semantics across .NET
+and Python services. Separate authentication from authorization:
 
-1. Authenticate the caller.
-2. Evaluate the endpoint policy.
-3. Evaluate resource ownership or tenant scope where required.
-4. Execute the application operation.
+1. Authenticate the caller. 2. Evaluate the endpoint policy. 3. Evaluate resource ownership or tenant scope where required. 4. Execute the
+   application operation.
 
-Never use feature flags to grant or remove authorization. Do not log tokens or complete claims when they contain personal or security-sensitive data.
+Never use feature flags to grant or remove authorization. Do not log tokens or complete claims when they contain personal or
+security-sensitive data.
 
 ## Reliability and observability
 
-Use correlation and trace propagation for inbound and outbound calls. Every request log should include service, route, result status, duration, correlation ID, and trace ID when available.
+Use correlation and trace propagation for inbound and outbound calls. Every request log should include service, route, result status,
+duration, correlation ID, and trace ID when available.
 
-Define timeout and retry policies per outbound dependency. Retry transient reads and explicitly idempotent operations only. Use circuit breakers where a failing dependency could exhaust service resources. Health endpoints should distinguish liveness from readiness and should report database readiness without exposing credentials.
+Define timeout and retry policies per outbound dependency. Retry transient reads and explicitly idempotent operations only. Use circuit
+breakers where a failing dependency could exhaust service resources. Health endpoints should distinguish liveness from readiness and should
+report database readiness without exposing credentials.
 
 ## MCP patterns
 
@@ -190,9 +205,13 @@ A later shared MCP layer may compose the seven API-specific servers or call thei
 
 ## Testing patterns
 
-Use Arrange, Act, Assert for unit tests. Name tests by operation, state, and expected behavior, for example `GetCustomer_WhenMissing_ReturnsNotFound`.
+Use Arrange, Act, Assert for unit tests. Name tests by operation, state, and expected behavior, for example
+`GetCustomer_WhenMissing_ReturnsNotFound`.
 
-Test behavior rather than private implementation details. Cover happy paths, boundaries, invalid input, authorization failures, concurrency-sensitive commands, soft deletion, idempotent upsert, pagination, and dependency failures. Use mocks only for direct abstractions where a test double clarifies the behavior. Prefer real database and distributed-resource integration tests for persistence, migrations, serialization, and service wiring.
+Test behavior rather than private implementation details. Cover happy paths, boundaries, invalid input, authorization failures,
+concurrency-sensitive commands, soft deletion, idempotent upsert, pagination, and dependency failures. Use mocks only for direct
+abstractions where a test double clarifies the behavior. Prefer real database and distributed-resource integration tests for persistence,
+migrations, serialization, and service wiring.
 
 ## Review checklist
 

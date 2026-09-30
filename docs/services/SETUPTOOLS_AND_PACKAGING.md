@@ -1,197 +1,122 @@
-# Setuptools & Python Packaging Guide
+# Python Packaging with setuptools
 
-## What is Setuptools?
+## Quick Start
 
-setuptools is a Python tool that packages your code so you can install it with `pip install`. It's the standard way to distribute Python applications.
-
-### Core Job
-
-setuptools reads `pyproject.toml` and:
-
-1. **Finds your source code** - Scans directories for Python packages
-2. **Checks dependencies** - Reads list of required packages
-3. **Downloads packages** - Gets dependencies from PyPI (Python Package Index)
-4. **Installs everything** - Puts code + dependencies where Python can find them
-5. **Creates metadata** - Generates `.egg-info/` for pip (install/uninstall tracking)
-6. **Registers with pip** - Makes `from payment_api import ...` work
-
----
-
-## Complete Setup Workflow
-
-### Step 1: Create pyproject.toml
-
-```toml
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
-# ↑ These lines tell pip to use setuptools for building
-
-[project]
-name = "payment-api"
-version = "0.1.0"
-description = "Payment processing service for distributed platform"
-readme = "README.md"
-requires-python = ">=3.12"
-
-# These dependencies are installed when you do: pip install .
-dependencies = [
-    "fastapi>=0.115,<1",
-    "PyJWT[crypto]>=2.10",
-    "pydantic-settings>=2.6",
-    "uvicorn",
-]
-
-# These are only installed for development: pip install ".[dev]"
-[project.optional-dependencies]
-dev = [
-    "pytest>=8",
-    "ruff>=0.8",
-    "httpx",
-]
-
-[tool.ruff]
-line-length = 100
-target-version = "py312"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-```
-
-### Step 2: Organize Code
-
-```
-src/PaymentApi/
-├── payment_api/              # ← This is your package
-│   ├── __init__.py          # Makes it a package
-│   ├── main.py              # Your code
-│   └── foundation/          # Sub-package
-│       ├── __init__.py
-│       ├── auth.py
-│       └── config.py
-├── tests/                   # ← Tests directory
-│   ├── __init__.py
-│   └── test_foundation.py
-├── pyproject.toml           # ← setuptools reads this
-├── Dockerfile
-└── README.md
-```
-
-**Important:** setuptools looks for packages (directories with `__init__.py`). Without `__init__.py`, directories are not packages.
-
-### Step 3: Run pip install
-
+Using **pip** (standard):
 ```bash
 cd src/PaymentApi
 pip install -e ".[dev]"
 ```
 
-#### What this command does:
-
-| Part | Meaning |
-|------|---------|
-| `pip install` | Package installer |
-| `-e` | Editable mode (code changes = immediate effect) |
-| `"."` | Install from current directory |
-| `"[dev]"` | Include optional dev dependencies |
-
-#### Installation steps:
-
-```
-1. setuptools reads pyproject.toml
-2. Sees: requires-python = ">=3.12"
-   → Checks you have Python 3.12+
-3. Sees: dependencies = ["fastapi>=0.115,<1", ...]
-   → Downloads from PyPI:
-      ✓ fastapi 0.115.0
-      ✓ PyJWT 2.10.1
-      ✓ pydantic-settings 2.6.0
-      ✓ uvicorn
-      ✓ All their dependencies
-4. Sees: [project.optional-dependencies] dev = ["pytest>=8", ...]
-   → Downloads:
-      ✓ pytest 8.0.0
-      ✓ ruff 0.8.0
-      ✓ httpx
-5. Installs everything to Python site-packages
-6. Creates payment_api.egg-info/ directory with metadata
-7. Registers "payment-api" with pip
-   → Now: from payment_api import app works
-```
-
-### Step 4: Verify Installation
-
+Using **uv** (faster):
 ```bash
-# Check if package is installed
-pip show payment-api
-
-# Output:
-# Name: payment-api
-# Version: 0.1.0
-# Summary: Payment processing service...
-# Location: C:\Users\...\lib\site-packages
-# Requires: fastapi, PyJWT, pydantic-settings, uvicorn
-# Required-by:
-
-# List all installed packages
-pip list | grep payment
-
-# Try to import
-python -c "from payment_api.main import app; print('✓ Installed correctly')"
+cd src/PaymentApi
+uv sync --extra dev
 ```
+
+**What this does:**
+- Reads `pyproject.toml`
+- Downloads dependencies from PyPI
+- Installs package in editable mode (code changes = immediate)
+- Generates `.egg-info/` metadata (pip only; uv uses lock files)
+
+---
+
+## pyproject.toml Structure
+
+```toml
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "payment-api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "PyJWT[crypto]>=2.10",
+    "pydantic-settings>=2.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.8", "httpx"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+```
+
+---
+
+## Project Structure
+
+```
+src/PaymentApi/
+├── payment_api/
+│   ├── __init__.py          (Required: makes it a package)
+│   ├── main.py
+│   └── foundation/
+│       ├── __init__.py
+│       ├── auth.py
+│       └── config.py
+├── tests/
+│   ├── __init__.py
+│   └── test_foundation.py
+├── pyproject.toml
+└── Dockerfile
+```
+
+Key: Directories need `__init__.py` to be packages.
 
 ---
 
 ## What .egg-info/ Contains
 
-When you run `pip install -e .`, setuptools creates a directory like `payment_api.egg-info/`:
+Auto-generated by `pip install -e .`:
 
 ```
 payment_api.egg-info/
-├── METADATA                 # Package name, version, author, etc.
-├── SOURCES.txt             # List of all files in package
-├── requires.txt            # Runtime dependencies
-│                           # fastapi>=0.115,<1
-│                           # PyJWT[crypto]>=2.10
-│                           # pydantic-settings>=2.6
-│                           # uvicorn
-├── top_level.txt           # Package name (payment_api)
-└── dependency_links.txt    # Where to find dependencies (usually empty)
+├── METADATA           # Package metadata
+├── SOURCES.txt        # List of package files
+├── requires.txt       # Dependencies
+└── top_level.txt      # Package name
 ```
 
-### Example SOURCES.txt
+**Never commit this** - it's auto-generated. Add to `.gitignore`:
 
 ```
-payment_api/__init__.py
-payment_api/main.py
-payment_api/foundation/__init__.py
-payment_api/foundation/auth.py
-payment_api/foundation/config.py
-tests/__init__.py
-tests/test_foundation.py
-pyproject.toml
-README.md
-Dockerfile
-```
-
-### Purpose of .egg-info/
-
-- **pip uses it to uninstall** - Knows which files to delete
-- **pip uses it to upgrade** - Knows what version is installed
-- **pip uses it for dependencies** - Knows what to install with this package
-- **Developers ignore it** - It's generated automatically
-
-### .gitignore Setup
-
-Never commit .egg-info/:
-
-```
-# .gitignore
 *.egg-info/
-__pycache__/
-.pytest_cache/
 ```
+
+---
+
+## Verify Installation
+
+Using **pip**:
+```bash
+pip show payment-api
+python -c "from payment_api.main import app; print('OK')"
+```
+
+Using **uv**:
+```bash
+uv pip show payment-api
+uv run python -c "from payment_api.main import app; print('OK')"
+```
+
+---
+
+## pip vs uv
+
+| Feature | pip | uv |
+|---------|-----|-----|
+| Speed | Slow | 10-100x faster |
+| Lock files | No | Yes (uv.lock) |
+| Reproducible builds | Manual | Automatic |
+| Standard | Yes | Growing adoption |
+
+**Use uv for development** (faster), **pip for CI/containers** (no lock files needed).
 
 ---
 

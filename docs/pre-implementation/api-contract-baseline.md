@@ -2,9 +2,12 @@
 
 ## Summary
 
-All public endpoints use versioned REST routes under `/v1`, typed request and response models, consistent Problem Details errors, and bounded list queries.
+All public endpoints use versioned REST routes under `/v1`, typed request and response models, consistent Problem Details errors, and
+bounded list queries.
 
-Commands follow CQRS and DDD boundaries. Contract, Payment, and Ledger command handlers append domain events to event-sourced aggregates. Query endpoints read projections and may be eventually consistent. Customer, Vendor, Invoice, and Notification use state-based command persistence with domain events and outbox records.
+Commands follow CQRS and DDD boundaries. Contract, Payment, and Ledger command handlers append domain events to event-sourced aggregates.
+Query endpoints read projections and may be eventually consistent. Customer, Vendor, Invoice, and Notification use state-based command
+persistence with domain events and outbox records.
 
 ## Resource routes
 
@@ -18,7 +21,8 @@ PUT    /v1/{resources}/{id}
 DELETE /v1/{resources}/{id}
 ```
 
-Resources are customers, vendors, contracts, invoices, payments, ledger entries, and notifications. Ledger entries and notifications have specialized read or command contracts because they are append-only or workflow records.
+Resources are customers, vendors, contracts, invoices, payments, ledger entries, and notifications. Ledger entries and notifications have
+specialized read or command contracts because they are append-only or workflow records.
 
 The initial API surface contains seven bounded-context services:
 
@@ -34,9 +38,12 @@ The initial API surface contains seven bounded-context services:
 
 ## Service boundaries
 
-Customer owns customers but does not own contracts, invoices, or payments. Vendor owns vendors and AP data but does not own contracts, invoices, or payments. Contract is the commercial root and stores `customerId` and optional `vendorId` references. Invoice belongs to a contract and customer, with an optional vendor reference for AP. Payment belongs to an invoice and customer or vendor.
+Customer owns customers but does not own contracts, invoices, or payments. Vendor owns vendors and AP data but does not own contracts,
+invoices, or payments. Contract is the commercial root and stores `customerId` and optional `vendorId` references. Invoice belongs to a
+contract and customer, with an optional vendor reference for AP. Payment belongs to an invoice and customer or vendor.
 
-Usage Metering remains a future bounded context. Ledger and Notification are initial services with independent databases and event consumers.
+Usage Metering remains a future bounded context. Ledger and Notification are initial services with independent databases and event
+consumers.
 
 ### Ownership relationship diagram
 
@@ -74,7 +81,8 @@ erDiagram
 }
 ```
 
-Contract status transitions are `draft -> active -> cancelled` or `draft -> cancelled`. Renewal appends a new contract version or renewal-period event without mutating issued invoices or completed payments. The Contract aggregate version provides optimistic concurrency.
+Contract status transitions are `draft -> active -> cancelled` or `draft -> cancelled`. Renewal appends a new contract version or
+renewal-period event without mutating issued invoices or completed payments. The Contract aggregate version provides optimistic concurrency.
 
 ### Invoice
 
@@ -89,7 +97,8 @@ Contract status transitions are `draft -> active -> cancelled` or `draft -> canc
 }
 ```
 
-Invoices become immutable after issuance. The state machine is `draft -> issued -> partially_paid -> paid`, with `issued -> overdue` and `issued -> void` where allowed.
+Invoices become immutable after issuance. The state machine is `draft -> issued -> partially_paid -> paid`, with `issued -> overdue` and
+`issued -> void` where allowed.
 
 ### Payment
 
@@ -103,7 +112,9 @@ Invoices become immutable after issuance. The state machine is `draft -> issued 
 }
 ```
 
-Payments are immutable financial records. Create requests require an idempotency key. Refunds and disputes append new related events and never rewrite the original payment stream. Ledger entries are owned exclusively by Ledger API and are appended through Ledger commands or payment integration events.
+Payments are immutable financial records. Create requests require an idempotency key. Refunds and disputes append new related events and
+never rewrite the original payment stream. Ledger entries are owned exclusively by Ledger API and are appended through Ledger commands or
+payment integration events.
 
 ## Initial endpoint contracts
 
