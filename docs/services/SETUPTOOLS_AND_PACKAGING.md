@@ -2,16 +2,23 @@
 
 ## Quick Start
 
+Using **pip** (standard):
 ```bash
 cd src/PaymentApi
 pip install -e ".[dev]"
+```
+
+Using **uv** (faster):
+```bash
+cd src/PaymentApi
+uv sync --extra dev
 ```
 
 **What this does:**
 - Reads `pyproject.toml`
 - Downloads dependencies from PyPI
 - Installs package in editable mode (code changes = immediate)
-- Generates `.egg-info/` metadata
+- Generates `.egg-info/` metadata (pip only; uv uses lock files)
 
 ---
 
@@ -86,10 +93,30 @@ payment_api.egg-info/
 
 ## Verify Installation
 
+Using **pip**:
 ```bash
 pip show payment-api
 python -c "from payment_api.main import app; print('OK')"
 ```
+
+Using **uv**:
+```bash
+uv pip show payment-api
+uv run python -c "from payment_api.main import app; print('OK')"
+```
+
+---
+
+## pip vs uv
+
+| Feature | pip | uv |
+|---------|-----|-----|
+| Speed | Slow | 10-100x faster |
+| Lock files | No | Yes (uv.lock) |
+| Reproducible builds | Manual | Automatic |
+| Standard | Yes | Growing adoption |
+
+**Use uv for development** (faster), **pip for CI/containers** (no lock files needed).
 
 ---
 
